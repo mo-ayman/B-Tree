@@ -43,9 +43,9 @@ public class BTree <K extends Comparable<K>, V> implements IBTree<K, V>{
         while (index < keysOfNode.size()){
             keyOfNode = keysOfNode.get(index);
             if(keyOfNode != null) compRes = key.compareTo(keyOfNode);
-            if(key == null || (compRes < 0 && !node.isLeaf()))
+            if((keyOfNode == null || compRes < 0 ) && !node.isLeaf())
                 return searchNode(key, (BTreeNode<K, V>) node.getChildren().get(index));
-            else if(key == null || (compRes < 0 && node.isLeaf())) return node;
+            else if((keyOfNode == null || compRes < 0) && node.isLeaf()) return node;
             else if(compRes > 0 && index < keysOfNode.size() - 1) index++;
             else if(compRes > 0 && index == keysOfNode.size() - 1 && !node.isLeaf())
                 return searchNode(key, (BTreeNode<K, V>) node.getChildren().get(index+1));
