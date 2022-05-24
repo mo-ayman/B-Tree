@@ -70,12 +70,9 @@ public class BTree <K extends Comparable<K>, V> implements IBTree<K, V>{
         List<K> keys = gotNode.getKeys();
         int index = binarySearch(0, keys.size() - 1, key, keys);
         if(index < 0) return false;
-        ///// we may have branches without a key in between also,
-        ////we may have violated the min no. of keys per node
-//        if(!gotNode.isLeaf()){
-//            ///// here possible violations are in the min no. of keys per node
-//
-//        }
+        if(!gotNode.isLeaf()){
+
+        }
         return false;
     }
 }

@@ -37,6 +37,7 @@ public class BTreeNode <K extends Comparable<K>, V> implements IBTreeNode<K, V>{
     public Item<K, V> getSuccessor(int index){
         BTreeNode<K, V> temp = (BTreeNode<K, V>) this.getChildren().get(index+1);
         while (!temp.isLeaf()) temp = (BTreeNode<K, V>) temp.getChildren().get(0);
+        if(temp.getNumOfKeys() == Math.ceil(items.length / 2) - 1) return null;
         K key = temp.getKeys().get(0);
         V val = temp.getValues().get(0);
         return new Item<>(key, val);
@@ -44,6 +45,7 @@ public class BTreeNode <K extends Comparable<K>, V> implements IBTreeNode<K, V>{
     public Item<K, V> getPredecessor(int index){
         BTreeNode<K, V> temp = (BTreeNode<K, V>) this.getChildren().get(index);
         while (!temp.isLeaf()) temp = (BTreeNode<K, V>) temp.getChildren().get(temp.getNumOfKeys());
+        if(temp.getNumOfKeys() == Math.ceil(items.length / 2) - 1) return null;
         K key = temp.getKeys().get(temp.getNumOfKeys() - 1);
         V val = temp.getValues().get(temp.getNumOfKeys() - 1);
         return new Item<>(key, val);
