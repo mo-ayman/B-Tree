@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BTreeNode <K extends Comparable<K>, V> implements IBTreeNode<K, V>{
+    private BTreeNode<K, V> parent;
     private Item<K, V>[] items; /// key-value pair stored at each slot
     private BTreeNode<K, V>[] children;   ///list of children pointed to
 
@@ -16,17 +17,52 @@ public class BTreeNode <K extends Comparable<K>, V> implements IBTreeNode<K, V>{
 //            | child   |      item     |  child |      item     | child |      item      | child |
 //            |    0    |       0       |    1   |        1      |    2  |        2       |   3   |
 //            ------------------------------------------------------------------------------------
-//
 
-
-    public BTreeNode(int degree) {
+    public BTreeNode(int degree, BTreeNode<K, V> parent) {
         this.items = new Item[degree - 1];
         this.children = new BTreeNode[degree];
+        this.parent = parent;
+    }
+
+    public BTreeNode<K, V> getParent() {
+        return parent;
+    }
+
+    public void setParent(BTreeNode<K, V> parent) {
+        this.parent = parent;
+    }
+    public Item<K, V> getSuccessor(int index){
+        BTreeNode<K, V> temp = (BTreeNode<K, V>) this.getChildren().get(index+1);
+        while (!temp.isLeaf()) temp = (BTreeNode<K, V>) temp.getChildren().get(0);
+        K key = temp.getKeys().get(0);
+        V val = temp.getValues().get(0);
+        return new Item<>(key, val);
+    }
+    public Item<K, V> getPredecessor(int index){
+        BTreeNode<K, V> temp = (BTreeNode<K, V>) this.getChildren().get(index);
+        while (!temp.isLeaf()) temp = (BTreeNode<K, V>) temp.getChildren().get(temp.getNumOfKeys());
+        K key = temp.getKeys().get(temp.getNumOfKeys() - 1);
+        V val = temp.getValues().get(temp.getNumOfKeys());
+        return new Item<>(key, val);
+    }
+
+    public BTreeNode<K, V> getRightSibling(){
+        List<IBTreeNode<K, V>> children = this.getParent().getChildren();
+        int index = children.indexOf(this);
+        if(index == children.size() - 1) return null;
+        return (BTreeNode<K, V>) children.get(index + 1);
+    }
+
+    public BTreeNode<K, V> getLeftSibling(){
+        List<IBTreeNode<K, V>> children = this.getParent().getChildren();
+        int index = children.indexOf(this);
+        if(index == 0) return null;
+        return (BTreeNode<K, V>) children.get(index - 1);
     }
 
     @Override
     public int getNumOfKeys() {
-        return this.items.length;
+        return this.getKeys().size();
     }
 
     @Override
