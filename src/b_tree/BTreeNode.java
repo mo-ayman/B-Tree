@@ -45,7 +45,7 @@ public class BTreeNode <K extends Comparable<K>, V> implements IBTreeNode<K, V>{
         BTreeNode<K, V> temp = (BTreeNode<K, V>) this.getChildren().get(index);
         while (!temp.isLeaf()) temp = (BTreeNode<K, V>) temp.getChildren().get(temp.getNumOfKeys());
         K key = temp.getKeys().get(temp.getNumOfKeys() - 1);
-        V val = temp.getValues().get(temp.getNumOfKeys());
+        V val = temp.getValues().get(temp.getNumOfKeys() - 1);
         return new Item<>(key, val);
     }
 
@@ -65,7 +65,7 @@ public class BTreeNode <K extends Comparable<K>, V> implements IBTreeNode<K, V>{
 
     @Override
     public int getNumOfKeys() {
-        return this.getKeys().size();
+        return actualSize;
     }
 
     @Override
@@ -76,7 +76,7 @@ public class BTreeNode <K extends Comparable<K>, V> implements IBTreeNode<K, V>{
         if (items.length + 1 >= 0) System.arraycopy(children, 0, newChildren, 0, items.length + 1);
         this.items = newItems;
         this.children = newChildren;
-        actualSize = 0;
+        actualSize = numOfKeys;
     }
 
     @Override
