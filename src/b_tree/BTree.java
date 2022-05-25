@@ -65,7 +65,7 @@ public class BTree <K extends Comparable<K>, V> implements IBTree<K, V>{
 
         if (hasChildren) {
             List<IBTreeNode<K, V>> children1 = children.subList(0, indexMedian + 1);
-            List<IBTreeNode<K, V>> children2 = children.subList(indexMedian + 1, children.size() + 1);
+            List<IBTreeNode<K, V>> children2 = children.subList(indexMedian + 1, children.size());
             leftNode = new BTreeNode<>(order, parentNode, newItemsList1, children1);
             rightNode = new BTreeNode<>(order, parentNode, newItemsList2, children2);
             for (IBTreeNode<K, V> child : children1)
