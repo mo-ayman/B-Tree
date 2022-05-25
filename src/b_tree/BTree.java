@@ -32,8 +32,6 @@ public class BTree <K extends Comparable<K>, V> implements IBTree<K, V>{
         listItems.add(newItem);
         if (targetNode.violatesMaxNoOfKeys())
             splitNodeAndInsertMedianInTheParent(targetNode);
-        else
-            targetNode.setItems(listItems);
     }
     
     private void splitNodeAndInsertMedianInTheParent(BTreeNode<K, V> targetNode) {
@@ -57,15 +55,15 @@ public class BTree <K extends Comparable<K>, V> implements IBTree<K, V>{
         parentItems.add(medianItem);
         parentItems.sort(Comparator.comparing(Item::getKey));
 
-        List<Item<K, V>> newItemsList1 = items.subList(0, indexMedian);
-        List<Item<K, V>> newItemsList2 = items.subList(indexMedian + 1, items.size());
+        List<Item<K, V>> newItemsList1 = new ArrayList<>(items.subList(0, indexMedian));
+        List<Item<K, V>> newItemsList2 = new ArrayList<>(items.subList(indexMedian + 1, items.size()));
 
         BTreeNode<K, V> leftNode;
         BTreeNode<K, V> rightNode;
 
         if (hasChildren) {
-            List<IBTreeNode<K, V>> children1 = children.subList(0, indexMedian + 1);
-            List<IBTreeNode<K, V>> children2 = children.subList(indexMedian + 1, children.size());
+            List<IBTreeNode<K, V>> children1 = new ArrayList<>(children.subList(0, indexMedian + 1));
+            List<IBTreeNode<K, V>> children2 = new ArrayList<>(children.subList(indexMedian + 1, children.size()));
             leftNode = new BTreeNode<>(order, parentNode, newItemsList1, children1);
             rightNode = new BTreeNode<>(order, parentNode, newItemsList2, children2);
             for (IBTreeNode<K, V> child : children1)
@@ -85,7 +83,6 @@ public class BTree <K extends Comparable<K>, V> implements IBTree<K, V>{
 
         if (parentItems.size() == order)
             splitNodeAndInsertMedianInTheParent(parentNode);
-        parentNode.setItems(parentItems);
     }
 
     @Override
