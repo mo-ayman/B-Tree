@@ -2,6 +2,7 @@ package b_tree;
 
 import org.w3c.dom.Node;
 
+import java.sql.Array;
 import java.util.*;
 
 public class BTree <K extends Comparable<K>, V> implements IBTree<K, V>{
@@ -29,7 +30,7 @@ public class BTree <K extends Comparable<K>, V> implements IBTree<K, V>{
         BTreeNode<K, V> targetNode = searchNode(key, root);
         List<Item<K, V>> listItems = targetNode.getItems();
         listItems.add(newItem);
-        if (targetNode.hasMaxNoOfKeys())
+        if (targetNode.violatesMaxNoOfKeys())
             splitNodeAndInsertMedianInTheParent(targetNode);
         else
             targetNode.setItems(listItems);
@@ -44,6 +45,14 @@ public class BTree <K extends Comparable<K>, V> implements IBTree<K, V>{
 
         int indexMedian = (items.size() - 1) / 2;
         Item<K, V> medianItem = items.get(indexMedian);
+        if (parentNode == null) {
+            parentNode = new BTreeNode<>(order, null);
+            List<IBTreeNode<K, V>> child = new ArrayList<>();
+            child.add(targetNode);
+            parentNode.setChildren(child);
+            targetNode.setParent(parentNode);
+            root = parentNode;
+        }
         List<Item<K, V>> parentItems = parentNode.getItems();
         parentItems.add(medianItem);
         parentItems.sort(Comparator.comparing(Item::getKey));

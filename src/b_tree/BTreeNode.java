@@ -7,9 +7,8 @@ import java.util.List;
 
 public class BTreeNode <K extends Comparable<K>, V> implements IBTreeNode<K, V>{
     private BTreeNode<K, V> parent;
-    private Item<K, V>[] items; /// key-value pair stored at each slot
-    private BTreeNode<K, V>[] children;   ///list of children pointed to
-    private int actualSize;
+    private List<Item<K, V>> items; /// key-value pair stored at each slot
+    private List<IBTreeNode<K, V>> children;   ///list of children pointed to
     private int order;
 
 //  e.g
@@ -22,27 +21,24 @@ public class BTreeNode <K extends Comparable<K>, V> implements IBTreeNode<K, V>{
 //            ------------------------------------------------------------------------------------
 
     public BTreeNode(int order, BTreeNode<K, V> parent) {
-        this.items = new Item[order - 1];
-        this.children = new BTreeNode[order];
+        this.items = new ArrayList<>();
+        this.children = new ArrayList<>();
         this.parent = parent;
         this.order = order;
-        actualSize = 0;
     }
 
     public BTreeNode(int order, BTreeNode<K, V> parent, List<Item<K, V>> items) {
-        this.items = items.toArray(new Item[0]);
-        this.children = new BTreeNode[order];
+        this.items = items;
+        this.children = new ArrayList<>();
         this.parent = parent;
         this.order = order;
-        actualSize = 0;
     }
 
     public BTreeNode(int order, BTreeNode<K, V> parent, List<Item<K, V>> items, List<IBTreeNode<K, V>> children) {
-        this.items = items.toArray(new Item[0]);
-        this.children = children.toArray(new BTreeNode[0]);
+        this.items = items;
+        this.children = children;
         this.parent = parent;
         this.order = order;
-        actualSize = 0;
     }
 
     public BTreeNode<K, V> getParent() {
@@ -99,47 +95,42 @@ public class BTreeNode <K extends Comparable<K>, V> implements IBTreeNode<K, V>{
 
     @Override
     public int getNumOfKeys() {
-        return actualSize;
+        return items.size();
     }
 
     @Override
     public void setNumOfKeys(int numOfKeys) {
-        Item<K, V>[] newItems  = new Item[numOfKeys];
-        BTreeNode<K, V>[] newChildren = new BTreeNode[numOfKeys + 1];
-        System.arraycopy(items, 0, newItems, 0, items.length);
-        if (items.length + 1 >= 0) System.arraycopy(children, 0, newChildren, 0, items.length + 1);
+        List<Item<K, V>> newItems  = new ArrayList<>();
+        List<IBTreeNode<K, V>> newChildren = new ArrayList<>();
+        System.arraycopy(items, 0, newItems, 0, items.size());
+        if (items.size() + 1 >= 0) System.arraycopy(children, 0, newChildren, 0, items.size() + 1);
         this.items = newItems;
         this.children = newChildren;
-        actualSize = numOfKeys;
     }
 
     @Override
     public boolean isLeaf() {
-        return children[0] == null;
+        return children.isEmpty();
     }
 
     @Override
     public void setLeaf(boolean isLeaf) {
-        int length = this.children.length;
-        this.children = new BTreeNode[length];
+        children = null;
     }
 
     @Override
     public List<K> getKeys() {
-        if(items.length == 0) return null;
         List<K> keys = new ArrayList<>();
-        for(Item<K, V> item : items) {
-            if(item != null) keys.add(item.getKey());
-        }
+        for(Item<K, V> item : items)
+            keys.add(item.getKey());
         return keys;
     }
 
     @Override
     public void setKeys(List<K> keys) {
         try {
-            actualSize = keys.size();
             for (int i = 0; i < keys.size(); i++) {
-                items[i].setKey(keys.get(i));
+                items.get(i).setKey(keys.get(i));
             }
         }catch (Exception e){
             System.out.println("different sizes");
@@ -148,7 +139,6 @@ public class BTreeNode <K extends Comparable<K>, V> implements IBTreeNode<K, V>{
     }
     @Override
     public List<V> getValues() {
-        if(items.length == 0) return null;
         List<V> values = new ArrayList<>();
         for(Item<K, V> item : items) values.add(item.getValue());
         return values;
@@ -156,57 +146,37 @@ public class BTreeNode <K extends Comparable<K>, V> implements IBTreeNode<K, V>{
 
     @Override
     public void setValues(List<V> values) {
-        try {
-            for (int i = 0; i < values.size(); i++)
-                items[i].setValue(values.get(i));
-        }catch (Exception e){
-            System.out.println("different sizes");
-            System.out.println(e.getMessage());
-        }
+        for (int i = 0; i < values.size(); i++)
+            items.get(i).setValue(values.get(i));
     }
 
     @Override
     public List<IBTreeNode<K, V>> getChildren() {
-        if(children.length == 0) return null;
-        return Arrays.asList(children);
+        return children;
     }
 
     @Override
     public void setChildren(List<IBTreeNode<K, V>> children) {
-        try {
-            for (int i = 0; i < children.size(); i++)
-                this.children[i] = (BTreeNode<K, V>) children.get(i);
-        }catch (Exception e){
-            System.out.println("different sizes");
-            System.out.println(e.getMessage());
-        }
+        this.children = children;
     }
 
     public void setItems(List<Item<K, V>> items) {
-        try {
-            actualSize = items.size();
-            for (int i = 0; i < items.size(); i++)
-                this.items[i] = items.get(i);
-        }catch (Exception e){
-            System.out.println("different sizes");
-            System.out.println(e.getMessage());
-        }
+        this.items = items;
     }
 
     public List<Item<K, V>> getItems() {
-        if (actualSize == 0) return new ArrayList<>();
-        return Arrays.asList(items);
+        return items;
     }
 
     public boolean isRoot() {
         return parent == null;
     }
     public boolean hasMinNoOfKeys() {
-        return (actualSize == Math.ceil(items.length / 2.0) - 1) || (isRoot() && actualSize == 1);
+        return (items.size() == Math.ceil(order / 2.0) - 1) || (isRoot() && items.size() == 1);
     }
 
-    public boolean hasMaxNoOfKeys() {
-        return actualSize == items.length;
+    public boolean violatesMaxNoOfKeys() {
+        return items.size() == order;
     }
 
 }
