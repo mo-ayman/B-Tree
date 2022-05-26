@@ -17,8 +17,19 @@ public class Main {
         bTree.insert(45, "loay11");
         bTree.insert(96, "loay");
         bTree.insert(100, "loay");
-        bTree.delete(38);
-        bTree.delete(19);
-        bTree.delete(4);
+        System.out.println("38 ->" + bTree.delete(38));
+        System.out.println("19 ->" + bTree.delete(19));
+        System.out.println("4 ->" + bTree.delete(4));
+        System.out.println("20 ->" + bTree.delete(20));
+        System.out.println("100 ->" + bTree.delete(100));
+        System.out.println("3 ->" + bTree.delete(3));
+        System.out.println("17 ->" + bTree.delete(17));
+        System.out.println("45 ->" + bTree.delete(45));
+        System.out.println("10 ->" +bTree.delete(10));
+        System.out.println("96 ->" +bTree.delete(96));
+        System.out.println("37 ->" +bTree.delete(37));
+        System.out.println("1 ->" +bTree.delete(1));
+        System.out.println("2 ->" +bTree.delete(2));
+        System.out.println("34 ->" + bTree.delete(34));
     }
 }
