@@ -1,14 +1,18 @@
 package search_engine;
 
+import java.util.HashMap;
+
 public class Doc implements Comparable<Doc>{
     private String id;
     private String title;
     private String text;
+    private HashMap<String, Integer> wordCount;
 
-    public Doc(String id, String title, String text) {
+    public Doc(String id, String title, String text, HashMap<String, Integer> wordCount) {
         this.title = title;
         this.text = text;
         this.id = id;
+        this.wordCount = wordCount;
     }
 
     @Override
@@ -43,5 +47,13 @@ public class Doc implements Comparable<Doc>{
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public HashMap<String, Integer> getWordCount() {
+        return wordCount;
+    }
+
+    public void setWordCount(HashMap<String, Integer> wordCount) {
+        this.wordCount = wordCount;
     }
 }

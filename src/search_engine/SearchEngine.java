@@ -41,10 +41,19 @@ public class SearchEngine implements ISearchEngine {
 
                 // index the document
                 if (flag == 0) {
+                    HashMap<String, Integer> wordCount = new HashMap<>();
                     count++;
-                    bTree.insert(id, new Doc(id, title, text));
+                    String[] words = text.split("\\s+");
+                    for(String w : words) {
+                        if(wordCount.containsKey(w)) {
+                            wordCount.put(w, wordCount.get(w) + 1);
+                        } else {
+                            wordCount.put(w, 1);
+                        }
+                    }
+                    bTree.insert(id, new Doc(id, title, text, wordCount));
                 } else if (flag == 1) {
-                    bTree.delete(title);
+                    bTree.delete(id);
                 }
             }
         }
@@ -72,15 +81,6 @@ public class SearchEngine implements ISearchEngine {
         }
     }
 
-//        File folder = new File(directoryPath);
-//        File[] listOfFiles = folder.listFiles();
-//        if(listOfFiles != null) {
-//            for (File file : listOfFiles) {
-//                if (file.isFile()) {
-//                    parseFile(file.getAbsolutePath(), 0);
-//                }
-//            }
-//        }
 
 
     @Override
@@ -95,19 +95,9 @@ public class SearchEngine implements ISearchEngine {
         HashMap<String, Integer> map = new HashMap<>();
         for(Doc doc : bTree) {
             count++;
-            // split the text into not empty words
-            String[] words = doc.getText().split("\\s+");
-            for(String w : words) {
-                if(w.equalsIgnoreCase(word)) {
-                    // increment the count of the word
-                    if(map.containsKey(doc.getId())) {
-                        map.put(doc.getId(), map.get(doc.getId()) + 1);
-                    } else {
-                        map.put(doc.getId(), 1);
-                    }
-                }
+            if(doc.getWordCount().containsKey(word)) {
+                map.put(doc.getId(), doc.getWordCount().get(word));
             }
-//            System.out.println(doc);
         }
         System.out.println("count number of indexed doc = " + count);
         // return map as a list of search results
@@ -125,25 +115,21 @@ public class SearchEngine implements ISearchEngine {
         int count = 0;
         HashMap<String, Integer[]> map = new HashMap<>();
         for(Doc doc : bTree) {
-            // split the text into not empty words
-            String[] words = doc.getText().split("\\s+");
-            for (String word : words) {
-                for (int senWord = 0; senWord < senWords.length; senWord++) {
-                    if (word.equalsIgnoreCase(senWords[senWord])) {
-                        if(!map.containsKey(doc.getId()))
-                            map.put(doc.getId(), new Integer[senWords.length]);
+            count++;
+            for(String word : senWords) {
+                if(doc.getWordCount().containsKey(word)) {
+                    if(!map.containsKey(doc.getId()))
+                        map.put(doc.getId(), new Integer[senWords.length]);
 
-                        // increment the count of the word
-                        if (map.get(doc.getId())[senWord] != null)
-                            map.get(doc.getId())[senWord] = map.get(doc.getId())[senWord] + 1;
-                         else
-                            map.get(doc.getId())[senWord] = 1;
-                    }
+                    // increment the count of the word
+                    if (map.get(doc.getId())[count] != null)
+                        map.get(doc.getId())[count] = map.get(doc.getId())[count] + 1;
+                    else
+                        map.get(doc.getId())[count] = 1;
                 }
             }
 
         }
-
         // return map as a list of search results
         List<ISearchResult> results = new ArrayList<>();
         for(String key : map.keySet()) {
