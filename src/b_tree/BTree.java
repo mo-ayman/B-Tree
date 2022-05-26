@@ -275,6 +275,11 @@ public class BTree <K extends Comparable<K>, V> implements IBTree<K, V>{
             parentVals.remove(indexWithinParent - 1);
             sibKeys.addAll(keys); sibVals.addAll(values);
             node.getParent().getChildren().remove(node);
+            if(!sibling.isLeaf()){
+                for(IBTreeNode<K,V> child: children)
+                    ((BTreeNode<K, V>)child).setParent(sibling);
+                sibChildren.addAll(children);
+            }
         }else{
             keys.add(parentKeys.get(indexWithinParent));
             values.add(parentVals.get(indexWithinParent));
@@ -282,12 +287,13 @@ public class BTree <K extends Comparable<K>, V> implements IBTree<K, V>{
             parentVals.remove(indexWithinParent - 1 + 1);
             keys.addAll(sibKeys); values.addAll(sibVals);
             node.getParent().getChildren().remove(rightSibling);
+            if(!sibling.isLeaf()){
+                for(IBTreeNode<K,V> child: sibChildren)
+                    ((BTreeNode<K, V>)child).setParent(node);
+                children.addAll(sibChildren);
+            }
         }
-        if(!sibling.isLeaf()){
-            for(IBTreeNode<K,V> child: children)
-                ((BTreeNode<K, V>)child).setParent(sibling);
-            sibChildren.addAll(children);
-        }
+
         node.setKeys(keys); node.setValues(values);
         node.getParent().setKeys(parentKeys); node.getParent().setValues(parentVals);
         sibling.setKeys(sibKeys); sibling.setValues(sibVals);
