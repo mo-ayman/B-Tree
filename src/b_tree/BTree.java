@@ -236,6 +236,7 @@ public class BTree <K extends Comparable<K>, V> implements IBTree<K, V>{
                 children.add(sibChildren.get(indexWithinSib));
             else
                 children.add(0, sibChildren.get(indexWithinSib));
+            ((BTreeNode<K, V>)sibChildren.get(indexWithinSib)).setParent(node);
             sibChildren.remove(indexWithinSib + 1 - 1);
         }
 
