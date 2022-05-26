@@ -17,5 +17,8 @@ public class Main {
         bTree.insert(45, "loay11");
         bTree.insert(96, "loay");
         bTree.insert(100, "loay");
+        bTree.delete(38);
+        bTree.delete(19);
+        bTree.delete(4);
     }
 }

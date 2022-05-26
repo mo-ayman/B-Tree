@@ -134,79 +134,68 @@ public class BTree <K extends Comparable<K>, V> implements IBTree<K, V>{
     }
     @Override
     public boolean delete(K key){
-        BTreeNode<K, V> gotNode = searchNode(key, this.root);
-        boolean violatesMin =  gotNode.hasMinNoOfKeys();
-        boolean nobranchViolation = false;
+        BTreeNode<K, V> gotNode = searchNode(key, root);
+        int indexOfKey = binarySearch(0, gotNode.getKeys().size() - 1, key, gotNode.getKeys());
+        if (indexOfKey < 0) return false; ///not found or already deleted
+        int indexWithinParent = 0;
+        if(gotNode != root) indexWithinParent = gotNode.getIndexWithinParent();
         //1st: solving key-less branches after deletion
-        if (!gotNode.isLeaf()){
-            ///try to replace the key with its predecessor or successor
-            nobranchViolation = replaceWithPredece_ssorOrSucce_ssor(gotNode, key);
-            if(!nobranchViolation) mergeChildren(gotNode, key);
-        }
-        if(violatesMin){
-            boolean done = borrowFromAsibling(gotNode, key, nobranchViolation);
-            if(!done) done = mergeWithSibling(gotNode, key, nobranchViolation);
-            if(!done) return false;
+        if (!gotNode.isLeaf()) ///try to replace the key with its predecessor or successor
+            return replaceWithPredece_ssorOrSucce_ssor(gotNode, key, indexOfKey);
+        else if(gotNode.isLeaf()) {
+            boolean done = borrowFromAsibling(gotNode, key, indexWithinParent);
+            if(!done) done = mergeWithSibling(gotNode, key, indexWithinParent);
+            return done;
         }
         if(this.root.getItems().size() == 0 && this.root.isLeaf()) this.root = null;
         return true;
     }
-    private boolean replaceWithPredece_ssorOrSucce_ssor(BTreeNode<K, V> node, K key){
+    private boolean replaceWithPredece_ssorOrSucce_ssor(BTreeNode<K, V> node, K key, int index){
         ///index of key within node
-        int index = binarySearch(0, node.getKeys().size() - 1, key, node.getKeys());
-        if (index < 0) return false;
-        Item<K, V> successorKey = node.getSuccessor(index);
-        Item<K, V> predecessorKey = node.getPredecessor(index);
-        Item<K, V> _cessorKey = null;
-        if(successorKey != null) _cessorKey = successorKey;
-        else if (predecessorKey != null) _cessorKey = predecessorKey;
-        List<K> keys = node.getKeys();
-        List<V> values = node.getValues();
-        if (_cessorKey == null) return false; //// you will need to merge children
-        else{ //attempt to replace with successor key
-            keys.set(index, _cessorKey.getKey());
-            values.set(index, _cessorKey.getValue());
-            node.setKeys(keys);
-            node.setValues(values);
-            delete(_cessorKey.getKey());
+        BTreeNode<K, V> successor = node.getSuccessor(index);
+        BTreeNode<K, V> predecessor = node.getPredecessor(index);
+        BTreeNode<K, V> _cessor ;
+        int i;
+        if(!successor.hasMinNoOfKeys()){
+            _cessor = successor;
+            i = 0;
         }
-        return true;
-    }
-    private boolean mergeChildren(BTreeNode<K, V> node, K key){
-        //// merging left and right children....
-        int index = binarySearch(0, node.getKeys().size() - 1, key, node.getKeys());
-        if (index < 0) return false;
-        BTreeNode<K, V> leftChild = node.getLeftChild(index);
-        BTreeNode<K, V> rightChild = node.getRightChild(index);
-
+        else{
+            _cessor = predecessor;
+            i = predecessor.getItems().size() - 1;
+        }
+        //attempt to replace with successor or predecessor key
         List<K> keys = node.getKeys();
         List<V> values = node.getValues();
+        K key1 = _cessor.getKeys().get(i);
+        V val1 = _cessor.getValues().get(i);
+        delete(key1);
+        keys.set(index, key1);
+        values.set(index, val1);
 
-        List<K> mergedKeys = leftChild.getKeys();
-        List<V> mergedVals = leftChild.getValues();
-        mergedKeys.addAll(rightChild.getKeys());
-        mergedVals.addAll(rightChild.getValues());
-        //// do not know what to do in case of descendants !!!!
-
-        leftChild.setKeys(mergedKeys);
-        leftChild.setValues(mergedVals);
-        rightChild.setItems(null);
-        keys.remove(key);
-        values.remove(node.getValues().get(index));
-        node.setKeys(keys);
-        node.setValues(values);
-        return true;
+        node.setKeys(keys); node.setValues(values);
+        return true; /// deleted properly
     }
-    private boolean borrowFromAsibling(BTreeNode<K, V> node, K key, boolean deleted){
+
+    private boolean borrowFromAsibling(BTreeNode<K, V> node, K key, int indexWithinParent){
         //// merging left and right children....
-        int ind = binarySearch(0, node.getKeys().size() - 1, key, node.getKeys());
-        if (ind < 0) return false;
-        int index = node.getIndexWithinParent();
-        BTreeNode<K, V> leftSibling = node.getLeftSibling();
-        BTreeNode<K, V> rightSibling = node.getRightSibling();
-        BTreeNode<K, V> sibling = leftSibling;
-        if(leftSibling == null || leftSibling.hasMinNoOfKeys())
+        if(node == root) {
+            node.getKeys().remove(key);
+            node.getValues().remove(node.getKeys().indexOf(key) + 1 - 1);
+            return true;
+        }
+        BTreeNode<K, V> leftSibling = node.getLeftSibling(), rightSibling = node.getRightSibling(),
+        sibling = leftSibling;
+        int indexWithinSib = 0, parentKeyInd = indexWithinParent - 1, indexWithinNode = 0;
+        if(leftSibling != null) indexWithinSib = leftSibling.getKeys().size() - 1;
+
+        if(leftSibling == null || leftSibling.hasMinNoOfKeys()) {
             sibling = rightSibling;
+            indexWithinSib = 0;
+            indexWithinNode = node.getKeys().size() - 1;
+            if(indexWithinNode < 0) indexWithinNode = 0;
+            parentKeyInd = indexWithinParent;
+        }
         if(rightSibling == null || rightSibling.hasMinNoOfKeys())
             return false; ///// need to merge with one of them
         List<K> sibKeys = sibling.getKeys() ;
@@ -219,84 +208,97 @@ public class BTree <K extends Comparable<K>, V> implements IBTree<K, V>{
         List<IBTreeNode<K, V>> children = node.getChildren();
         List<K> keys = node.getKeys();
         List<V> values = node.getValues();
-        if (!deleted) {
+
+        if(key != null){
+            boolean noViolation = !node.hasMinNoOfKeys();
+            values.remove(node.getKeys().indexOf(key));
             keys.remove(key);
-            values.remove(node.getValues().get(index));
+            node.setKeys(keys);
+            node.setValues(values);
+            if(noViolation) return true;
         }
-        if(sibling == leftSibling){
-            children.set(children.size() - 1, children.get(children.size() - 2));
-            for(int i = keys.size() - 2; i > - 1; i--) {
-                keys.set(i+1, keys.get(i));
-                values.set(i+1, values.get(i));
-                children.set(i+1, children.get(i));
-            }
-            keys.set(0, parentKeys.get(index - 1));
-            values.set(0, parentVals.get(index - 1));
-            children.set(0, sibChildren.get(sibling.getNumOfKeys()));
-            ((BTreeNode<K, V>)sibChildren.get(sibling.getNumOfKeys())).setParent(node);
-            parentKeys.set(index - 1, sibKeys.get(sibling.getNumOfKeys() - 1));
-            parentVals.set(index - 1, sibVals.get(sibling.getNumOfKeys() - 1));
-            sibKeys.remove(sibKeys.get(sibling.getNumOfKeys() - 1));
-            sibVals.remove(sibVals.get(sibling.getNumOfKeys() - 1));
-            sibChildren.set(sibling.getNumOfKeys(), null);
-            node.getParent().setKeys(parentKeys); node.getParent().setValues(parentVals);
-            node.setKeys(keys); node.setValues(values); node.setChildren(children);
-            sibling.setKeys(sibKeys); sibling.setValues(sibVals); sibling.setChildren(sibChildren);
+
+        keys.add(indexWithinNode, parentKeys.get(parentKeyInd));
+        values.add(indexWithinNode, parentVals.get(parentKeyInd));
+        parentKeys.set(parentKeyInd, sibKeys.get(indexWithinSib));
+        parentVals.set(parentKeyInd, sibVals.get(indexWithinSib));
+        sibKeys.remove(indexWithinSib + 1 - 1);
+        sibVals.remove(indexWithinSib + 1 - 1);
+
+        if(indexWithinNode == node.getKeys().size() - 1) indexWithinNode++;
+//        else indexWithinSib++;
+
+        if(!children.isEmpty()){
+            if (sibling == rightSibling)
+                children.add(sibChildren.get(indexWithinSib));
+            else
+                children.add(0, sibChildren.get(indexWithinSib));
+            sibChildren.remove(indexWithinSib + 1 - 1);
         }
+
+        node.setKeys(keys); node.setValues(values); node.setChildren(children);
+        node.getParent().setKeys(parentKeys); node.getParent().setValues(parentVals);
+        sibling.setKeys(sibKeys); sibling.setValues(sibVals); sibling.setChildren(sibChildren);
         return true;
     }
-    private boolean mergeWithSibling(BTreeNode<K, V> node, K key, boolean deleted){
-        int ind = binarySearch(0, node.getKeys().size() - 1, key, node.getKeys());
-        if (ind < 0) return false;
-        int index = node.getIndexWithinParent();
-        BTreeNode<K, V> leftSibling = node.getLeftSibling();
-        BTreeNode<K, V> rightSibling = node.getRightSibling();
-        BTreeNode<K, V> sibling = leftSibling;
-        if(leftSibling == null || leftSibling.hasMinNoOfKeys())
-            sibling = rightSibling;
-        if((rightSibling == null || rightSibling.hasMinNoOfKeys()) && node.isRoot() && node.isLeaf())
+    private boolean mergeWithSibling(BTreeNode<K, V> node, K key, int indexWithinParent){
+        if(node == root) {
+            node.getKeys().remove(key);
+            node.getValues().remove(node.getKeys().indexOf(key) + 1 - 1);
             return true;
+        }
+        BTreeNode<K, V> leftSibling = node.getLeftSibling(), rightSibling = node.getRightSibling(), sibling;
+        sibling = leftSibling;
+        if(leftSibling == null)
+            sibling = rightSibling;
+//        if(rightSibling == null || ! rightSibling.hasMinNoOfKeys())
+//            return false;
         List<K> sibKeys = sibling.getKeys() ;
         List<V> sibVals = sibling.getValues();
+
         List<K> parentKeys = node.getParent().getKeys();
         List<V> parentVals = node.getParent().getValues();
 
-//        do not know what to do with children...
         List<K> keys = node.getKeys();
         List<V> values = node.getValues();
-        if (!deleted) {
+
+        if(keys.contains(key)) {
+            boolean noViolation = !node.hasMinNoOfKeys();
+            values.remove(keys.indexOf(key) - 1 + 1);
             keys.remove(key);
-            values.remove(node.getValues().get(index));
-        }
-        if(sibling == leftSibling){
-            sibKeys.add(parentKeys.get(index - 1));
-            sibVals.add(parentVals.get(index - 1));
-            parentKeys.remove(index - 1);
-            parentVals.remove(index - 1);
-            sibKeys.addAll(node.getKeys());
-            sibVals.addAll(node.getValues());
-            leftSibling.setKeys(sibKeys);
-            leftSibling.setValues(sibVals);
-            node.setItems(null);
-            node.getParent().setKeys(parentKeys);
-            node.getParent().setValues(parentVals);
-        }
-        else{
-            keys.add(parentKeys.get(index));
-            values.add(parentVals.get(index));
-            parentKeys.remove(index - 1 + 1);
-            parentVals.remove(index - 1 + 1);
-            keys.addAll(sibKeys);
-            values.addAll(sibVals);
-            sibling.setItems(null);
             node.setKeys(keys);
             node.setValues(values);
-            node.getParent().setKeys(parentKeys);
-            node.getParent().setValues(parentVals);
+            if(noViolation) return true;
         }
-        if(parentKeys.size() == 0){
-            node.setParent(node.getParent().getParent());
-            node.getParent().getParent().getChildren().set(node.getParent().getIndexWithinParent(), node);
+
+        boolean fixParent = node.getParent().hasMinNoOfKeys();
+        if(sibling == leftSibling){
+            sibKeys.add(parentKeys.get(indexWithinParent - 1));
+            sibVals.add(parentVals.get(indexWithinParent - 1));
+            parentKeys.remove(indexWithinParent - 1); parentVals.remove(indexWithinParent - 1);
+            sibKeys.addAll(keys); sibVals.addAll(values);
+            node.getParent().getChildren().remove(node);
+        }
+        else{
+            keys.add(parentKeys.get(indexWithinParent));
+            values.add(parentVals.get(indexWithinParent));
+            parentKeys.remove(indexWithinParent - 1 + 1);parentVals.remove(indexWithinParent - 1 + 1);
+            keys.addAll(sibKeys); values.addAll(sibVals);
+            node.getParent().getChildren().remove(rightSibling);
+        }
+        node.setKeys(keys); node.setValues(values);
+        node.getParent().setKeys(parentKeys); node.getParent().setValues(parentVals);
+        sibling.setKeys(sibKeys); sibling.setValues(sibVals);
+        node = node.getParent();
+        if(fixParent){
+            if(node == root) {
+                root = sibling;
+                node.setParent(null);
+            }
+            else{
+                boolean done = borrowFromAsibling(node, null, node.getIndexWithinParent());
+                if(!done) mergeWithSibling(node, null, node.getIndexWithinParent());
+            }
         }
         return true;
     }

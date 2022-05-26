@@ -9,7 +9,7 @@ public class BTreeNode <K extends Comparable<K>, V> implements IBTreeNode<K, V>{
     private BTreeNode<K, V> parent;
     private List<Item<K, V>> items; /// key-value pair stored at each slot
     private List<IBTreeNode<K, V>> children;   ///list of children pointed to
-    private int order;
+    private final int order;
 
 //  e.g
 //               items : ( , ), ( , ), ( , );
@@ -48,21 +48,15 @@ public class BTreeNode <K extends Comparable<K>, V> implements IBTreeNode<K, V>{
     public void setParent(BTreeNode<K, V> parent) {
         this.parent = parent;
     }
-    public Item<K, V> getSuccessor(int index){
+    public BTreeNode<K, V> getSuccessor(int index){
         BTreeNode<K, V> temp = (BTreeNode<K, V>) this.getChildren().get(index+1);
         while (!temp.isLeaf()) temp = (BTreeNode<K, V>) temp.getChildren().get(0);
-        if(temp.hasMinNoOfKeys()) return null;
-        K key = temp.getKeys().get(0);
-        V val = temp.getValues().get(0);
-        return new Item<>(key, val);
+        return temp;
     }
-    public Item<K, V> getPredecessor(int index){
+    public BTreeNode<K, V> getPredecessor(int index){
         BTreeNode<K, V> temp = (BTreeNode<K, V>) this.getChildren().get(index);
         while (!temp.isLeaf()) temp = (BTreeNode<K, V>) temp.getChildren().get(temp.getNumOfKeys());
-        if(temp.hasMinNoOfKeys()) return null;
-        K key = temp.getKeys().get(temp.getNumOfKeys() - 1);
-        V val = temp.getValues().get(temp.getNumOfKeys() - 1);
-        return new Item<>(key, val);
+        return temp;
     }
 
     public BTreeNode<K, V> getRightSibling(){
@@ -88,8 +82,7 @@ public class BTreeNode <K extends Comparable<K>, V> implements IBTreeNode<K, V>{
     }
     public int getIndexWithinParent(){
         List<IBTreeNode<K, V>> children = this.getParent().getChildren();
-        int index = children.indexOf(this);
-        return index;
+        return children.indexOf(this);
     }
 
 
@@ -121,6 +114,7 @@ public class BTreeNode <K extends Comparable<K>, V> implements IBTreeNode<K, V>{
     @Override
     public List<K> getKeys() {
         List<K> keys = new ArrayList<>();
+        if(items.isEmpty()) return keys;
         for(Item<K, V> item : items)
             keys.add(item.getKey());
         return keys;
@@ -128,18 +122,16 @@ public class BTreeNode <K extends Comparable<K>, V> implements IBTreeNode<K, V>{
 
     @Override
     public void setKeys(List<K> keys) {
-        try {
-            for (int i = 0; i < keys.size(); i++) {
-                items.get(i).setKey(keys.get(i));
-            }
-        }catch (Exception e){
-            System.out.println("different sizes");
-            System.out.println(e.getMessage());
+        items.clear();
+        for (int i = 0; i < keys.size(); i++){
+            items.add(new Item<K, V>());
+            items.get(i).setKey(keys.get(i));
         }
     }
     @Override
     public List<V> getValues() {
         List<V> values = new ArrayList<>();
+        if(items.isEmpty()) return values;
         for(Item<K, V> item : items) values.add(item.getValue());
         return values;
     }
