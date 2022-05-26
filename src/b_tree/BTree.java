@@ -1,11 +1,8 @@
 package b_tree;
 
-import org.w3c.dom.Node;
-
-import java.sql.Array;
 import java.util.*;
 
-public class BTree <K extends Comparable<K>, V> implements IBTree<K, V>{
+public class BTree <K extends Comparable<K>, V> implements IBTree<K, V> , Iterable<V> {
     private BTreeNode<K, V> root;
     private final int order; //// order is max no. of children within a node
 
@@ -312,6 +309,31 @@ public class BTree <K extends Comparable<K>, V> implements IBTree<K, V>{
         }
         return true;
     }
+
+    @Override
+    public Iterator<V> iterator() {
+        return new BTreeIterator<>(this);
+    }
+    // preorder traversal
+    public int preOrderTraversal(){
+        if(root == null) return 0;
+        int count = 0;
+        BTreeNode<K, V> node = root;
+        Stack<BTreeNode<K, V>> stack = new Stack<>();
+        stack.push(node);
+        while(!stack.isEmpty()){
+            node = stack.pop();
+            count += node.getKeys().size();
+            // print items in node
+//            for(Item itm : node.getItems())
+//                System.out.println("key : " + itm.getKey() + " value : " + itm.getValue());
+
+            for(int i = node.getChildren().size() - 1; i >= 0; i--)
+                stack.push((BTreeNode<K, V>)node.getChildren().get(i));
+        }
+        return count;
+    }
+
 }
 
 

@@ -1,5 +1,9 @@
 package search_engine;
 
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
 import java.util.List;
 
 public interface ISearchEngine {
@@ -11,7 +15,7 @@ public interface ISearchEngine {
      * search through them later.
      * @param filePath
      */
-    public void indexWebPage(String filePath);
+    public void indexWebPage(String filePath) throws ParserConfigurationException, IOException, SAXException;
 
     /**
      * Given a root directory, you are required to index all the files
@@ -21,7 +25,7 @@ public interface ISearchEngine {
      * to search through them later.
      * @param directoryPath
      */
-    public void indexDirectory(String directoryPath);
+    public void indexDirectory(String directoryPath) throws ParserConfigurationException, IOException, SAXException;
 
     /**
      * Given a file path that contains one or more Wikipedia documents
@@ -29,7 +33,7 @@ public interface ISearchEngine {
      * you are required to delete these documents IDs from the B-Tree index if they were indexed before
      * @param filePath
      */
-    public void deleteWebPage(String filePath);
+    public void deleteWebPage(String filePath) throws ParserConfigurationException, IOException, SAXException;
 
     /**
      * Given a search query of one word, you are required to return a list
