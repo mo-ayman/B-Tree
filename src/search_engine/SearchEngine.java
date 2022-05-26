@@ -40,9 +40,9 @@ public class SearchEngine implements ISearchEngine {
 
 
                 // index the document
-                if(flag == 0) {
+                if (flag == 0) {
                     count++;
-                    bTree.insert(id , new Doc(id, title, text));
+                    bTree.insert(id, new Doc(id, title, text));
                 } else if (flag == 1) {
                     bTree.delete(title);
                 }
@@ -51,6 +51,7 @@ public class SearchEngine implements ISearchEngine {
         System.out.println("Total number of inserted documents: " + count);
 
     }
+
     @Override
     public void indexWebPage(String filePath) throws ParserConfigurationException, IOException, SAXException {
         parseFile(filePath, 0);
@@ -58,16 +59,29 @@ public class SearchEngine implements ISearchEngine {
 
     @Override
     public void indexDirectory(String directoryPath) throws ParserConfigurationException, IOException, SAXException {
-        File folder = new File(directoryPath);
-        File[] listOfFiles = folder.listFiles();
-        if(listOfFiles != null) {
-            for (File file : listOfFiles) {
-                if (file.isFile()) {
-                    parseFile(file.getAbsolutePath(), 0);
-                }
+        // inclue all the files in the directory and in sub-directories
+        File dir = new File(directoryPath);
+        File[] files = dir.listFiles();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                indexDirectory(file.getAbsolutePath());
+
+            } else {
+                parseFile(file.getAbsolutePath(), 0);
             }
         }
     }
+
+//        File folder = new File(directoryPath);
+//        File[] listOfFiles = folder.listFiles();
+//        if(listOfFiles != null) {
+//            for (File file : listOfFiles) {
+//                if (file.isFile()) {
+//                    parseFile(file.getAbsolutePath(), 0);
+//                }
+//            }
+//        }
+
 
     @Override
     public void deleteWebPage(String filePath) throws ParserConfigurationException, IOException, SAXException {
