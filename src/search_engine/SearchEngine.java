@@ -38,27 +38,31 @@ public class SearchEngine implements ISearchEngine {
                 String title = element.getAttribute("title");
                 String text = element.getTextContent();
 
-
                 // index the document
                 if (flag == 0) {
                     HashMap<String, Integer> wordCount = new HashMap<>();
                     count++;
                     String[] words = text.split("\\s+");
                     for(String w : words) {
+                        w = w.toLowerCase();
                         if(wordCount.containsKey(w)) {
                             wordCount.put(w, wordCount.get(w) + 1);
                         } else {
                             wordCount.put(w, 1);
                         }
                     }
+
                     bTree.insert(id, new Doc(id, title, text, wordCount));
                 } else if (flag == 1) {
                     bTree.delete(id);
+                    count++;
                 }
             }
         }
-        System.out.println("Total number of inserted documents: " + count);
-
+        if (flag == 0)
+            System.out.println("Total number of inserted documents: " + count);
+        else
+            System.out.println("Total number of deleted documents: " + count);
     }
 
     @Override
@@ -68,13 +72,12 @@ public class SearchEngine implements ISearchEngine {
 
     @Override
     public void indexDirectory(String directoryPath) throws ParserConfigurationException, IOException, SAXException {
-        // inclue all the files in the directory and in sub-directories
+        // include all the files in the directory and in subdirectories
         File dir = new File(directoryPath);
         File[] files = dir.listFiles();
         for (File file : files) {
             if (file.isDirectory()) {
                 indexDirectory(file.getAbsolutePath());
-
             } else {
                 parseFile(file.getAbsolutePath(), 0);
             }
@@ -92,6 +95,7 @@ public class SearchEngine implements ISearchEngine {
     public List<ISearchResult> searchByWordWithRanking(String word) {
         // implement iterator for b-tree
         int count = 0;
+        word = word.toLowerCase();
         HashMap<String, Integer> map = new HashMap<>();
         for(Doc doc : bTree) {
             count++;
@@ -112,23 +116,21 @@ public class SearchEngine implements ISearchEngine {
     public List<ISearchResult> searchByMultipleWordWithRanking(String sentence) {
         // split the sentence into words
         String[] senWords = sentence.split("\\s+");
-        int count = 0;
         HashMap<String, Integer[]> map = new HashMap<>();
         for(Doc doc : bTree) {
-            count++;
-            for(String word : senWords) {
-                if(doc.getWordCount().containsKey(word)) {
-                    if(!map.containsKey(doc.getId()))
+            int count = -1;
+
+            for (String word : senWords) {
+                word = word.toLowerCase();
+                count++;
+                if (doc.getWordCount().containsKey(word)) {
+
+                    if (!map.containsKey(doc.getId()))
                         map.put(doc.getId(), new Integer[senWords.length]);
 
-                    // increment the count of the word
-                    if (map.get(doc.getId())[count] != null)
-                        map.get(doc.getId())[count] = map.get(doc.getId())[count] + 1;
-                    else
-                        map.get(doc.getId())[count] = 1;
+                    map.get(doc.getId())[count] = doc.getWordCount().get(word);
                 }
             }
-
         }
         // return map as a list of search results
         List<ISearchResult> results = new ArrayList<>();
@@ -145,6 +147,7 @@ public class SearchEngine implements ISearchEngine {
                 mn = arr[i];
             }
         }
+        assert mn != (int) 1e9;
         return mn;
     }
 
